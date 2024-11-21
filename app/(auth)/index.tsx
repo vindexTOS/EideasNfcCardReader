@@ -12,6 +12,7 @@ import { LoginPostRequest } from "@/API/auth/Login.Request";
 import { loginType } from "@/types/Login.Types";
 import { useRouter } from "expo-router"; 
 import { useAuth } from "@/hooks/useAuthUser";
+import axios from "axios";
 export default function Login() {
   const [authInfo, setAuthInfo] = useState<loginType>({
     email: "",
@@ -40,7 +41,9 @@ export default function Login() {
       router.push("/(home)");
     }
   });
-
+ const login = async ()=>{
+   await axios.post("http://192.168.1.111:8000/api/login",authInfo).then(res => console.log(res)).catch(err => console.log(err))
+ }
   const handleLogin = async () => {
    
     if (authInfo.email && authInfo.password) {
@@ -60,7 +63,10 @@ export default function Login() {
       router.push("/(home)");
 
     }
-    router.push("/(home)");
+    // setTimeout(()=>{
+    //   router.push("/(home)");
+
+    // },1000)
  },[userInfo])
   return (
     <View style={styles.container}>
@@ -83,7 +89,7 @@ export default function Login() {
         placeholderTextColor="white"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity style={styles.button} onPress={login}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
     </View>
