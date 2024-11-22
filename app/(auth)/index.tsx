@@ -41,9 +41,9 @@ export default function Login() {
       router.push("/(home)");
     }
   });
- const login = async ()=>{
-   await axios.post("http://192.168.1.111:8000/api/login",authInfo).then(res => console.log(res)).catch(err => console.log(err))
- }
+//  const login = async ()=>{
+//    await axios.post("http://3.71.18.216/api/login",authInfo).then(res => console.log(res)).catch(err => console.log(err))
+//  }
   const handleLogin = async () => {
    
     if (authInfo.email && authInfo.password) {
@@ -89,7 +89,7 @@ export default function Login() {
         placeholderTextColor="white"
       />
 
-      <TouchableOpacity style={styles.button} onPress={login}>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
     </View>

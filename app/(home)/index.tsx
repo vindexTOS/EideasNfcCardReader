@@ -1,10 +1,11 @@
-import { View, Text, FlatList, TouchableOpacity, Modal, Button, StyleSheet, TextInput , PermissionsAndroid, Alert} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, Button, StyleSheet, TextInput , PermissionsAndroid, Alert, ActivityIndicator} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuthUser';
 import { GetAllUserInfo } from '@/API/users/userGetRequest';
 import { useQuery } from '@tanstack/react-query';
-// import QRCodeScanner from 'react-native-qrcode-scanner';
-// import { RNCamera } from 'react-native-camera';
+ 
+import { RNCamera } from 'react-native-camera';
+import QRCodeScanner from '@/components/modals/QRCodeScanner';
 
 interface User {
   id: number;
@@ -22,37 +23,7 @@ export default function Home() {
 
 
 
-
-  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
-
-//   const requestCameraPermission = async () => {
-//     try {
-//       const granted = await PermissionsAndroid.request(
-//         PermissionsAndroid.PERMISSIONS.CAMERA,
-//         {
-//           title: "Camera Permission",
-//           message: "We need access to your camera to scan QR codes",
-//           buttonNeutral: "Ask Me Later",
-//           buttonNegative: "Cancel",
-//           buttonPositive: "OK",
-//         }
-//       );
-//       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-//         setCameraPermissionGranted(true);
-//         console.log("Camera permission granted");
-//       } else {
-//         Alert.alert("Permission Denied", "Camera permission is required to scan QR codes.");
-//         setCameraPermissionGranted(false);
-//         console.log("Camera permission denied");
-//       }
-//     } catch (err) {
-//       console.warn(err);
-//     }
-//   };
-// useEffect(()=>{
-//   requestCameraPermission()
-// },[])
-
+ 
 
 
 
@@ -63,10 +34,11 @@ export default function Home() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [openQRScannerModal, setOpenQRScannerModal] = useState<boolean>(false);
-  const [scannedQR, setScannedQR] = useState<string>('');
+  
+  const [scanned, setScanned] = useState(false);
 
 const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
-  const { data, isSuccess } = useQuery({
+  const { data, isSuccess , isLoading} = useQuery({
     queryKey: ["get-all-users", { id: userInfo?.sub, page, searchQuery }],
     queryFn: () => GetAllUserInfo(userInfo?.sub as string, page, searchQuery),
     enabled: !!userInfo?.sub,
@@ -77,9 +49,11 @@ const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
   });
 
   useEffect(() => {
-    if (isSuccess && data?.data && data?.data.data.length > 0) {
+    if (isSuccess && data?.data?.data && data?.data?.data.length > 0) {
       setUsers(data.data.data);
+   
     }
+    // console.log(data?.data?.data)
   }, [data, isSuccess]);
 
   const handleUserPress = (user: User) => {
@@ -99,11 +73,10 @@ const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
     }
   };
 
-  // const handleQRCodeRead = (e: any) => {
-  //   setScannedQR(e.data);
-  //   console.log('Scanned QR Code:', e.data);
-  //   setOpenQRScannerModal(false);
-  // };
+  const handleScan = (data: string) => {
+    setScanned(false);
+    console.log(`Scanned data: ${data}`);
+  };
   
   return (
     <View style={styles.container}>
@@ -140,9 +113,9 @@ const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
         </TouchableOpacity>
 
         <Text style={styles.paginationInfo}>
-          Page {data?.data.current_page} of {Math.ceil(data?.data.total / data?.data.per_page)}
+          Page {data?.data.current_page} of {Math.ceil(data?.data.total / data?.data.per_paრge)}
         </Text>
-
+      {isLoading &&  <ActivityIndicator/>}
         <TouchableOpacity
           style={[
             styles.paginationButton,
@@ -191,7 +164,7 @@ const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
               </>
             )}
             <View style={{display:'flex', justifyContent:"space-between", flexDirection:"row",gap:20}}>          
-                <Button title="დახურვა" onPress={() => setModalVisible(false)} />
+            <Button title="დახურვა" onPress={() => setModalVisible(false)} />
             <Button title="ბარათის დამატება"    onPress={() => setOpenCardAddModal(true)}  />
 
             </View>
@@ -220,19 +193,14 @@ const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
     </View>
       </View>
     </View>
+      {/* QR Scanner Modal */}
+    
   </Modal>
   {/*  */}
 
       </Modal>
-      {/* QR Scanner Modal */}
-      {/* <Modal animationType="slide" transparent={true} visible={openQRScannerModal} onRequestClose={() => setOpenQRScannerModal(false)}>
-        <QRCodeScanner
-          onRead={handleQRCodeRead}
-          flashMode={RNCamera.Constants.FlashMode.off}
-          topContent={<Text style={styles.modalHeader}>Scan the QR Code</Text>}
-          bottomContent={<Button title="Close Scanner" onPress={() => setOpenQRScannerModal(false)} />}
-        />
-      </Modal> */}
+      <QRCodeScanner onScanned={handleScan} />
+
  
     </View>
   );
@@ -240,9 +208,10 @@ const [openCardAddModal,setOpenCardAddModal] = useState<boolean>(false)
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+   display:'flex',
     padding: 16,
     backgroundColor: '#f8f8f8',
+    height:"100%"
   },
   header: {
     fontSize: 24,
@@ -334,7 +303,7 @@ const styles = StyleSheet.create({
   },
   cardItem: {
     backgroundColor: '#fff',
-    padding: 16,
+    padding: 5,
     marginBottom: 16,
     borderRadius: 10,
     shadowColor: '#000',
@@ -342,6 +311,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    width:"100%"
   },
   cardTitle: {
     fontSize: 18,

@@ -28,6 +28,10 @@ export const GetAllUserInfo = async (id: string, page: number = 1, search: strin
 
     const res:any = await ApiManager(url, {
       method: "GET",
+      headers: {
+         
+        'Content-Type': 'application/json',
+      },
     });
 
     return res;
