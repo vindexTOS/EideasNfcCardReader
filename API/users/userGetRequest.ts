@@ -40,3 +40,19 @@ export const GetAllUserInfo = async (id: string, page: number = 1, search: strin
     throw new Error((error as Error).message);
   }
 };
+
+
+export const GetSingleUserInfo = async (id:string )=>{
+   try {
+    const res = await ApiManager(`get-single-user-cards/${id}`, {
+      method:"GET",
+      headers: {
+          'Content-Type': 'application/json',
+      },
+    })
+    return res 
+   } catch (error) {
+    throw new Error((error as Error).message);
+
+   }
+}

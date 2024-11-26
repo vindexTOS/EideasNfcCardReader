@@ -1,83 +1,116 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
-import { Camera, CameraType, CameraView } from "expo-camera";
- 
-interface QRCodeScannerProps {
-  onScanned: (data: string) => void;
-}
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
-const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ onScanned }) => {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanned, setScanned] = useState(false);
+export default function QrCodeScanner({setQrCodeData}:{setQrCodeData: React.Dispatch<any>}) {
+  const [hasPermission, requestPermission] = useCameraPermissions();
+  const [scannedData, setScannedData] = useState('');
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
+    if (!hasPermission) {
+      requestPermission();
+    }
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
-    setScanned(true);
-    Alert.alert(`QR code with type ${type} and data ${data} has been scanned!`);
-    onScanned(data);
-  };
+    // Register the barcode scanner listener
+    const subscription = CameraView.onModernBarcodeScanned((event) => {
+      const { type, data } = event;
+      Alert.alert('QR Code Scanned', `Type: ${type}\nData: ${data}`);
+      setScannedData(data);
+    });
 
-  if (hasPermission === null) {
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.remove();
+    };
+  }, [hasPermission]);
+
+  if (!hasPermission) {
     return (
       <View style={styles.centered}>
-        <Text>Requesting for camera permission...</Text>
+        <Text>Requesting camera permission...</Text>
       </View>
     );
   }
 
-  if (hasPermission === false) {
+  if (!hasPermission.granted) {
     return (
       <View style={styles.centered}>
         <Text>No access to camera</Text>
+        <TouchableOpacity onPress={requestPermission} style={styles.button}>
+          <Text style={styles.buttonText}>Grant Permission</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={StyleSheet.absoluteFillObject}>
- <CameraView
-  barcodeScannerSettings={{
-    barcodeTypes: ["qr"],
-  }}
-/>
-      {scanned && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={() => setScanned(false)}>
-            <Text style={styles.scanAgain}>Tap to Scan Again</Text>
+    <View style={styles.container}>
+      <CameraView
+        style={StyleSheet.absoluteFillObject}
+        facing='back'
+       onBarcodeScanned={({data})=>{
+   
+        setQrCodeData(data)
+        }}
+      />
+      {scannedData && (
+        <View style={styles.resultContainer}>
+          <Text style={styles.resultText}>Scanned Data: {scannedData}</Text>
+          <TouchableOpacity
+            style={styles.rescanButton}
+            onPress={() => {
+              setScannedData('null');
+            }}
+          >
+            <Text style={styles.rescanText}>Scan Again</Text>
           </TouchableOpacity>
         </View>
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   centered: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  buttonContainer: {
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  scanAgain: {
-    color: "#007bff",
-    fontSize: 18,
-    fontWeight: "bold",
+  button: {
+    marginTop: 20,
     padding: 10,
-    backgroundColor: "#ffffffaa",
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  resultContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 20,
     borderRadius: 10,
+    alignItems: 'center',
+  },
+  resultText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  rescanButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+  },
+  rescanText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
-
-export default QRCodeScanner;

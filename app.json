@@ -26,6 +26,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -45,6 +53,9 @@
       "eas": {
         "projectId": "85e6d386-c40f-4291-b4c7-0b5c88dde751"
       }
-    }
+    },
+    "permissions": [
+      "CAMERA"
+    ]
   }
 }

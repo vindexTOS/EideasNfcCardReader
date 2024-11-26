@@ -6,19 +6,21 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LoginPostRequest } from "@/API/auth/Login.Request";
 import { loginType } from "@/types/Login.Types";
-import { useRouter } from "expo-router"; 
+import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/useAuthUser";
-import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
+
 export default function Login() {
   const [authInfo, setAuthInfo] = useState<loginType>({
     email: "",
     password: "",
   });
-  const router = useRouter(); 
+  const router = useRouter();
+
   const handleInput = (key: string, value: string) => {
     setAuthInfo((prevState) => ({
       ...prevState,
@@ -30,22 +32,15 @@ export default function Login() {
     mutationFn: (body: loginType) => {
       return LoginPostRequest(body);
     },
-    onError:()=>{
-      Alert.alert(
-        "Error login",
-        "Something went wrong",
-        [{ text: "OK" }]
-      );
+    onError: () => {
+      Alert.alert("Error login", "Something went wrong", [{ text: "OK" }]);
     },
-    onSuccess:()=>{
+    onSuccess: () => {
       router.push("/(home)");
-    }
+    },
   });
-//  const login = async ()=>{
-//    await axios.post("http://3.71.18.216/api/login",authInfo).then(res => console.log(res)).catch(err => console.log(err))
-//  }
+
   const handleLogin = async () => {
-   
     if (authInfo.email && authInfo.password) {
       await mutation.mutateAsync(authInfo);
     } else {
@@ -55,45 +50,52 @@ export default function Login() {
         [{ text: "OK" }]
       );
     }
-  }; 
+  };
 
-  const { userInfo, token } = useAuth();
- useEffect(()=>{
-    if(userInfo?.sub){
+  const { userInfo } = useAuth();
+
+  useEffect(() => {
+    if (userInfo?.sub) {
       router.push("/(home)");
-
     }
-    // setTimeout(()=>{
-    //   router.push("/(home)");
+  }, [userInfo]);
 
-    // },1000)
- },[userInfo])
-  return (
-    <View style={styles.container}>
-      {/* <Text style={styles.title}>Eideas</Text> */}
-
-      <TextInput
-        value={authInfo.email}
-        onChangeText={(text) => handleInput("email", text)}
-        style={styles.input}
-        placeholder="email"
-        placeholderTextColor="white"
-      />
-
-      <TextInput
-        onChangeText={(text) => handleInput("password", text)}
-        value={authInfo.password}
-        style={styles.input}
-        placeholder="password"
-        secureTextEntry
-        placeholderTextColor="white"
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Log In</Text>
-      </TouchableOpacity>
-    </View>
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userInfo?.sub) {
+        router.push("/(home)");
+      }
+    }, [userInfo])
   );
+
+  if (!userInfo?.sub) {
+    return (
+      <View style={styles.container}>
+        <TextInput
+          value={authInfo.email}
+          onChangeText={(text) => handleInput("email", text)}
+          style={styles.input}
+          placeholder="email"
+          placeholderTextColor="white"
+        />
+
+        <TextInput
+          onChangeText={(text) => handleInput("password", text)}
+          value={authInfo.password}
+          style={styles.input}
+          placeholder="password"
+          secureTextEntry
+          placeholderTextColor="white"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Log In</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  } else {
+    return null; // Or you can return a loading spinner if needed
+  }
 }
 
 const styles = StyleSheet.create({
@@ -103,12 +105,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#1e1e1e",
     padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    color: "white",
-    fontWeight: "bold",
-    marginBottom: 40,
   },
   input: {
     width: "100%",
