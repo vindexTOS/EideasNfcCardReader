@@ -2,7 +2,7 @@
   "expo": {
     "name": "EideasNative",
     "slug": "EideasNative",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -36,8 +36,6 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
@@ -53,9 +51,6 @@
       "eas": {
         "projectId": "85e6d386-c40f-4291-b4c7-0b5c88dde751"
       }
-    },
-    "permissions": [
-      "CAMERA"
-    ]
+    }
   }
 }
